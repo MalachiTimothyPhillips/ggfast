@@ -1,0 +1,409 @@
+---
+title: "ggfast: Extensible package for data reduction in aid of visualization"
+author: "Malachi Phillips"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Motivation
+
+Deciphering data is hard. Deciphering *lots* of data is *very* hard. The initial motivation for writing a package such as _ggfast_ was in order to enable users to better control their data, rather than having the data control them. _ggfast_ relies on several different 'data reduction' and 'predictive' techniques that all fall into the guise of classical statistics/machine learning concepts. What's most powerful in the types of analysis that _ggfast_ relies on is the ability to reduce data: taking in large sets of multivariate data and reducing it down to just a few clusters, or just a few principle components. In doing these analyses provided in _ggfast_, one hopes to be able to separate the signal from the noise within a data set, in order to reach real, data-driven inferences from these analyses.
+
+# Theoretical Background for Analyses
+
+_ggfast_ relies on a few of the following different analyses:
+  - Kmeans clustering
+  - Principle Component Analysis (PCA)
+  - Multi-linear regression (MLR)
+  
+Although the means through which each analysis works differ, the key points of all of these analyses are the same:
+
+  1) Reduce the size of the data, whether into clusters, principle components, or a single equation
+  2) Provide a natural error estimator for how much error occurs in the data reduction, whether through cluster gap errors, less-constributing principle components, or linear residuals
+  3) Offer a predictive tool, whether through representing a data point by its nearest cluster, making an inference from the equation of the principal component, or relying on the model provided by a multi-linear regression.
+  
+In this regard, each of these analyses has the attractive offer shown in (1)-(3), but may achieve it in a different way.
+
+## Kmeans clustering
+
+Kmeans clustering aims to take our multivariate data set and reduce them into $k$ centroids that may then be used to predict values based on the inferred value of the closest centroid.
+For example, suppose 19 clusters are generated from some huge, multivariate data set, and we wish to infer a measured variable $f$ from the clusters. We then, taking the information of the new point, assign it to the closest cluster, say cluster #5. From here, we infer the new data's value of $f$ based on the value of $f$ from cluster 5.
+In particular, kmeans clustering is attractive as it provides a way of predicting `qualitative, categorical variables`. In this regard, kmeans clustering is the only effective tool for the prediction of a qualitative, categorical variable in _ggfast_. The other analyses are ill-adapted to analyze categorical variables.
+
+The kmeans clustering algorithm may be described by the following pseudo code:
+
+1) Initialize *cluster centroids* $\mu_1,mu_2,...,\mu_k$ randomly, where $k$ is the number of clusters we are considering.
+
+2) Repeat until convergence/maximum number of iterations: {
+  For every *i* indexing the observations, set to the closest cluster, ie. $c^{(i)}= arg min_j |x^{(i)}-\mu_j|^2$. This sets the observation to the nearest cluster available.
+  For every *j*, re-calculate the cluster means for each $\mu_j$ based on what data is currently assigned to each cluster.
+
+## Principal Component Analysis (PCA)
+
+Principal component analysis (PCA) is a form of analysis that seeks to _reduce_ the dimensionality of a multivariate data set, hoping to reduce, say $p=12$ variables into two or three main components which are made up of the other variables. Furthermore, it is also possible using a PCA analysis to see what, if any, variables may be singly contributing to the variability of a data set. In this regard, a PCA analysis can be _elucidating_ into the nature of the data set, and similarly has both predictive power (in the equations drawn up from the principal components), and an error estimator (in the error taken from not considering several components).
+
+The basis of PCA lies in the eigenvector-eigenvalue problem, namely:
+
+$$
+Ax=\lambda x
+$$
+
+Where we are seeking to find all $(\lambda_i,x_i)$ pairs. Then by sorting the eigenvector/eigenvalues by the largest magnitude eigenvalues, we can calculate the amount of variability explained in an individual component by:
+
+$$
+\dfrac {\lambda_j} {\sum_{i} \lambda_{i}}
+$$
+Further, the principal components have an equation of the form:
+
+$$
+Y_i = e_i'(x-\mu)
+$$
+Often, a PCA analysis can explain 95% of the variability with just the top two principal components. However, this isn't always the case -- many times, PCA analyses offer little to no insight. 
+
+## Multiple Linear Regression
+
+Linear regression models are formulated to estimate the linear dependence of variables. For example, a p-dimensional data set would be approximated as follows:
+
+$$
+y_i = \beta_0 + \beta_1 x_{1,i} + ... \beta_p x_{p,i}
+$$
+
+It also follows that:
+
+$$
+Y = X\beta + \epsilon
+$$
+This can also be summarized as a series of vector-matrix operations, with $X$ denoting the design matix, which is the data matrix (minus the response) with a column of 1's appended to the leftmost column:
+
+$$
+\beta = (X'X)^{-1}X'Y
+$$
+Of course, $\beta$ is merely a point-estimate for the population parameter $\beta$, and so there is some need to do bootstrapping to obtain distributional information about $\beta$.
+
+The power of multilinear regression, like the other methods, is that it offers:
+
+  - an error estimator, in the form of $\epsilon_i = |y_i-\hat{y_i}|$
+  - predictive power, in the form of $\hat{Y}=X\beta$
+
+With this information, we are able to move onto the implementation details.
+
+# Functions in ggfast
+
+## Kmeans clustering
+
+The (current) functionality of _ggfast_ included is:
+
+(1) Cluster reduction/write to file function.
+
+Writes to a .csv file the output of a cluster reduction, up to a given k.
+
+Implementation:
+
+```{r, eval=FALSE}
+#'
+#' Reduce the amount of data through using kmeans clustering algorithm
+#' Call the in R kmean cluster function in order to reduce a pool of data into a few, clustered points
+#'
+#' @param x Data in the form of a data frame or data matrix, for safety, please use data.matrix(...) as a wrapper
+#' @param k Number of clusters to form
+#' @param fileName Name of file you wish to save a .csv formatted file to
+#' @param iter.max Number of iterations to use at a maximum (default = 10)
+#' @param nstart How many random sets to be chosen
+#' @param algorithm What algorithm to use (default="Lloyd").
+#'                  choices include: "Hartigan-Wong", "LLoyd", "MacQueen", and "Forgy"
+#' @param trace logical or integer number, currently only used in the default method ("Hartigan-Wong"):
+#'  if positive (or true), tracing information on the progress of the algorithm is produced.
+#'  Higher values may produce more tracing information.
+#'
+#'  @examples
+#'  reduce_cluster(data.matrix(iris), 10, "myFile.csv")
+#'  reduce_cluster(df, 15, "myManyIterationsFile.csv", iter.max=1000, algorithm="MacQueen")
+#'
+reduce_cluster<-function(x, k, fileName, iter.max = 10, nstart = 1, algorithm="Lloyd", trace = FALSE)
+{
+  # perform cluster analysis to find means of each cluster group
+  cl<-kmeans(x,k,iter.max=iter.max,nstart=nstart,algorithm=algorithm,trace=trace)
+  reduced_data<-cl$centers
+
+  # write output data in the form of a .csv file
+  write.csv(reduced_data, fileName)
+
+}
+```
+
+Examples:
+
+```{r, eval=FALSE}
+reduce_cluster(data.matrix(iris), 10, "output.csv")
+```
+
+(2) The ability to visualize the reduced data, on top of the original data:
+
+Implementation:
+
+```{r, eval=FALSE}
+#'
+#' Visualize the amount of data reduction in the first component from using clustering
+#' This verifies that the clustering analysis can be of some use for data reduction
+#'
+#' @param x Data in the form of a data frame or data matrix, for safety, please use data.matrix(...) as a wrapper
+#' @param k Number of clusters to form
+#'
+#' @examples
+#' visualize_reduction(data.matrix(iris), 19)
+visualize_reduction<-function(x,k)
+{
+  cl<-kmeans(x,k)
+  reduced_data<-cl$centers
+  windows()
+  plot(x)
+  points(reduced_data,col="Blue", add=TRUE)
+}
+```
+
+Examples:
+
+```{r, eval=FALSE}
+visualize_reduction(data.matrix(iris),15)
+```
+
+(3) A detailed analysis on the impact of the choice of k, along with several other useful analyses.
+
+Implementation:
+
+```{r, eval=FALSE}
+#'
+#' Perform the types of anaylsis which do a reduction on the data set,
+#' finding the optimum value of k
+#'
+#' NOTE: by default, this will perform the analysis on the scaled data
+#'
+#' @param x Data in the form of a data frame or data matrix, for safety, please use data.matrix(...) as a wrapper
+#' @param kmax (=10) Maximum number of clusters to form
+#' @param elbowPlotFileName (="elbowPlot.jpeg"), name of file for elbow plot output
+#' @param silhouetteFileName (="silhouette.jpeg"), name of file for silhouette plot output
+#' @param gapFileName (="gap.jpeg"), name of file for output of gap statistics plot
+#' @param iter.max (=100) Maximum number of iterations
+#' @param nstart How many random sets to be chosen
+#' @param algorithm What algorithm to use (default="Lloyd").
+#'                  choices include: "Hartigan-Wong", "LLoyd", "MacQueen", and "Forgy"
+#' @param trace logical or integer number, currently only used in the default method ("Hartigan-Wong"):
+#'  if positive (or true), tracing information on the progress of the algorithm is produced.
+#'  Higher values may produce more tracing information.
+#' @param debugOutput (=FALSE) Boolean value for whether or not to output silhouette plots for
+#' each and every cluster value used. This generates a TON of output! YOU HAVE BEEN WARNED!
+#' @param debugOutFileNameBase (="sil") Base file name for debug output, if enabled.
+#'
+#' @examples
+#' cluster_k_analysis(data.matrix(iris), kmax=19)
+#' cluster_k_analysis(data.matrix(iris), kmax=19, iter.max=200, debugOutput=T)
+cluster_k_analysis<-function(x,
+                             kmax=10,
+                             elbowPlotFileName = "elbowPlot.jpeg",
+                             silhouetteFileName = "silhouette.jpeg",
+                             gapFileName = "gap.jpeg",
+                             iter.max = 100,
+                             nstart = 1,
+                             algorithm="Lloyd",
+                             trace = FALSE,
+                             debugOutput=FALSE,
+                             debugOutFileNameBase="sil")
+{
+  # normalize the data
+  x<-scale(x)
+  wss<-function(k){
+    kmeans(x,k,iter.max,nstart,algorithm,trace)$tot.withinss
+  }
+
+  # Compute from k = 1 to k = n
+  n = dim(x)[1]-1
+  k.values <- 2 : kmax
+
+  # extract wss for 2-n clusters
+  wss_values<-purrr::map_dbl(k.values,wss)
+
+  # Output the 'elbow plot' approach to determining the ideal
+  # number of clusters to use in this type of analysis
+  jpeg(elbowPlotFileName)
+
+  # make a plot
+  plot(k.values, wss_values,
+       type="b", pch = 19, frame = FALSE,
+       xlab="Number of clusters K",
+       ylab="Total within-clusters sum of squares")
+
+  dev.off()
+
+  # function to compute average silhouette for k clusters
+  avg_sil <- function(k) {
+    km.res <- kmeans(x, centers = k, nstart = 25)
+    ss <- cluster::silhouette(km.res$cluster, dist(x))
+    if(debugOutput){
+      name=paste(debugOutFileNameBase, k, ".jpeg", sep="")
+      jpeg(name)
+      plot(ss)
+      dev.off()
+    }
+    mean(ss[,3])
+  }
+
+  avg_sil_values <- purrr::map(k.values, avg_sil)
+
+  jpeg(silhouetteFileName)
+  plot(k.values, avg_sil_values,
+       type = "b", pch = 19, frame = FALSE,
+       xlab = "Number of clusters K",
+       ylab = "Average Silhouettes")
+  dev.off()
+
+  gap_stat<-cluster::clusGap(x,FUN=kmeans, nstart=nstart, K.max=kmax, B=50)
+  jpeg(gapFileName)
+  plot(gap_stat, xlab="Number of clusters k")
+  dev.off()
+
+  list(GapStatistics = gap_stat)
+}
+```
+
+Examples:
+
+```{r, eval=FALSE}
+cluster_k_analysis(data.matrix(iris), kmax=19, iter.max=200, debugOutput=T)
+```
+
+## Principal Component Analysis
+
+The current functioanlity of _ggfast_ currently includes:
+
+(1) Determining greatest factors, and % of variability explained with $k$ factors:
+
+Implementation:
+
+```{r, eval=FALSE}
+#'
+#' Determine greatest data factors
+#' @param x Data set to be analyzes
+#' @param k Number of components considered
+#'
+#' @examples
+#' determine_greatest_contributors(data.matrix(iris), 2)
+#'
+determine_greatest_contributors<-function(x, k)
+{
+  x<-scale(x)
+  S<-cov(x)
+  eig_res<-eigen(S)
+
+  lambda_sum = sum(eig_res$value)
+  n = length(eig_res$value)
+  prop<-matrix(NA, nr=n)
+  for(i in 1 : n){
+    prop[i]=eig_res$value[i]/lambda_sum
+  }
+
+  err<-1-sum(prop[1:k])
+
+  list(EigenValues = eig_res$value, EigenvalueSum= lambda_sum, Proportions=prop, Error=err, EigenVectors=eig_res$vectors)
+}
+```
+
+Examples:
+
+```{r, eval=FALSE}
+determine_greatest_contributors(data.matrix(iris), 2)
+```
+
+(2) Run a PCA analysis, showing the components, as well as a built in clustering analysis.
+
+Implementation:
+
+```{r, eval=FALSE}
+#'
+#' After calling whatever means of cluster reductions, now do a PCA
+#' on the already reduced data set.
+#'
+#' @param x Data set to be analyzed
+#' @param k Number of components considerd
+#' @param barPlotFileName (="barPlotComp.jpeg") file name used to store bar plot output
+#'
+PCAPlot<-function(x, k, barPlotFileName="barPlotComp.jpeg")
+{
+  unscaled<-x # keep a local copy for later
+  x<-scale(x)
+  pca<-determine_greatest_contributors(x,k)
+  PC<-x%*% pca$EigenVectors
+  Component<-colnames(x)
+  Proportion<-pca$Proportions
+  Errors<-1-pca$Proportions
+  df<-data.frame(Component,Proportion,Errors)
+
+  theme<-ggplot2::theme_set(cowplot::theme_cowplot()) + ggplot2::theme(legend.position="none")
+  g<-ggpubr::ggbarplot(df, x="Component", y="Proportion", fill="Component",palette="jco",ggtheme=theme, sort.val="desc")
+  p<-ggpubr::ggbarplot(df, x="Component", y="Errors", fill="Component", palette="jco",ggtheme=theme, sort.val="desc")
+  graph<-cowplot::plot_grid(g,p)
+  cowplot::save_plot(barPlotFileName, graph, base_aspect_ratio=3.0)
+
+  # Now, in the case of k = 1,2, or 3, we can visualize the data and apply SLR on it
+  data<-cbind(Component, Proportion)
+  data<-data[order(-Proportion),]
+
+  # Take the top k parts only
+  names<-data[(1:k),1]
+  #print(data)
+  print(names)
+  reduced_scaled_data_set<-subset(x, select=names) # Additionally have the option of outputting the data
+
+  reduced_unscaled_data_set<-subset(x, select=names)
+  df<-reshape2::melt(reduced_unscaled_data_set)
+
+  if(k == 2){
+    windows()
+    plot(reduced_unscaled_data_set,
+         main="Reduced Data Set Scatter Plot",
+         xlab=colnames(reduced_unscaled_data_set)[1],
+         ylab=colnames(reduced_unscaled_data_set)[2])
+
+    # After performing this analysis, we can also do a cluster analysis
+    # Typically, k = 5 clusters is an appropriate enough choice for now
+    k = 5
+    clus<-kmeans(reduced_unscaled_data_set,centers=k)
+    windows()
+    cluster::clusplot(reduced_unscaled_data_set, clus$cluster)
+  }
+
+  # Additional plot -- look at the clusplot for all of the data
+  k = 5
+  clus<-kmeans(x, centers=k)
+  windows()
+  cluster::clusplot(x, clus$cluster)
+
+  # We may now extend this into three dimensions instead
+  kdf<-kmeans(x,4)
+  newdf<-data.frame(x, K=kdf$cluster)
+  pcdf<-princomp(x,cor=T,score=T)
+  summary(pcdf)
+  rgl::plot3d(pcdf$scores, col=newdf$K)
+
+}
+```
+
+Examples:
+
+```{r, eval=FALSE}
+PCAPlot(data.matrix(iris), 2)
+```
+
+## Multiple Linear Regresion
+
+(TODO)
