@@ -12,10 +12,20 @@ betah(X, Y)
 \item{Y}{Response vector}
 }
 \description{
-Point estimate for beta, used in linear regression
+Notice that this is done by solving the linear system:
+(X'X) beta = X'Y
+}
+\details{
+Rather than using a direct method, ie.
+
+beta = (X'X)^(-1)X'Y
+
+We shall instead use a package known as 'pcig' that solves
+a pre-conditioned conjugate gradient formulation, and is more
+numerically stable whenever the matrix approaches singularity.
 }
 \examples{
-betah(matrix(c(1,2,3,4,5,6), nr=2, byrow=TRUE),
-      matrix(c(1,2,3), nc=3))
+betah(matrix(c(1,2,3,4,5,6), nr=3, byrow=TRUE),
+      matrix(c(1,2,3), nr=3))
 
 }

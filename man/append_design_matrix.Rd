@@ -17,5 +17,6 @@ append_design_matrix(matrix(c(1,2,3,4,5,6), nr=2, byrow=TRUE))
 
 df<-iris
 df<-df[,2:dim(df)[2]] # remove first column, using it as the response vector
+append_design_matrix(df)
 
 }
