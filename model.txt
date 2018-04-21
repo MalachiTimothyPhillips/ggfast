@@ -1,0 +1,18 @@
+
+  # JAGS model specification begins here...
+  model {
+  # Likelihood:
+  for( i in 1:N ) {
+  y[i] ~ dnorm( y.hat[i] , tau )
+  y.hat[i] <- b0 +  inprod( b[1:nPred] , x[i,1:nPred] )
+  }
+  # Prior (assumes standardized data):
+  tau <- 1/pow(sigma,2)
+  sigma ~ dunif( 0 , 10 )
+  b0 ~ dnorm( 0 , 1.0E-2 )
+  for ( j in 1:nPred ) {
+  b[j] ~ dnorm( 0 , 1.0E-2 )
+  }
+  }
+  # ... end JAGS model specification
+  
