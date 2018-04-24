@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Malachi Phillips" />
+
+<meta name="date" content="2018-04-24" />
+
+<title>ggfast: Extensible package for data reduction in aid of visualization</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">ggfast: Extensible package for data reduction in aid of visualization</h1>
+<h4 class="author"><em>Malachi Phillips</em></h4>
+<h4 class="date"><em>2018-04-24</em></h4>
+
+
+
+<div id="motivation" class="section level1">
+<h1>Motivation</h1>
+<p>Deciphering data is hard. Deciphering <em>lots</em> of data is <em>very</em> hard. The initial motivation for writing a package such as <em>ggfast</em> was in order to enable users to better control their data, rather than having the data control them. <em>ggfast</em> relies on several different ‘data reduction’ and ‘predictive’ techniques that all fall into the guise of classical statistics/machine learning concepts. What’s most powerful in the types of analysis that <em>ggfast</em> relies on is the ability to reduce data: taking in large sets of multivariate data and reducing it down to just a few clusters, or just a few principle components. In doing these analyses provided in <em>ggfast</em>, one hopes to be able to separate the signal from the noise within a data set, in order to reach real, data-driven inferences from these analyses.</p>
+</div>
+<div id="theoretical-background-for-analyses" class="section level1">
+<h1>Theoretical Background for Analyses</h1>
+<p><em>ggfast</em> relies on a few of the following different analyses: - Kmeans clustering - Principle Component Analysis (PCA) - Multi-linear regression (MLR)</p>
+<p>Although the means through which each analysis works differ, the key points of all of these analyses are the same:</p>
+<ol style="list-style-type: decimal">
+<li>Reduce the size of the data, whether into clusters, principle components, or a single equation</li>
+<li>Provide a natural error estimator for how much error occurs in the data reduction, whether through cluster gap errors, less-constributing principle components, or linear residuals</li>
+<li>Offer a predictive tool, whether through representing a data point by its nearest cluster, making an inference from the equation of the principal component, or relying on the model provided by a multi-linear regression.</li>
+</ol>
+<p>In this regard, each of these analyses has the attractive offer shown in (1)-(3), but may achieve it in a different way.</p>
+<div id="kmeans-clustering" class="section level2">
+<h2>Kmeans clustering</h2>
+<p>Kmeans clustering aims to take our multivariate data set and reduce them into <span class="math inline">\(k\)</span> centroids that may then be used to predict values based on the inferred value of the closest centroid. For example, suppose 19 clusters are generated from some huge, multivariate data set, and we wish to infer a measured variable <span class="math inline">\(f\)</span> from the clusters. We then, taking the information of the new point, assign it to the closest cluster, say cluster #5. From here, we infer the new data’s value of <span class="math inline">\(f\)</span> based on the value of <span class="math inline">\(f\)</span> from cluster 5. In particular, kmeans clustering is attractive as it provides a way of predicting <code>qualitative, categorical variables</code>. In this regard, kmeans clustering is the only effective tool for the prediction of a qualitative, categorical variable in <em>ggfast</em>. The other analyses are ill-adapted to analyze categorical variables.</p>
+<p>The kmeans clustering algorithm may be described by the following pseudo code:</p>
+<ol style="list-style-type: decimal">
+<li><p>Initialize <em>cluster centroids</em> <span class="math inline">\(\mu_1,mu_2,...,\mu_k\)</span> randomly, where <span class="math inline">\(k\)</span> is the number of clusters we are considering.</p></li>
+<li><p>Repeat until convergence/maximum number of iterations: { For every <em>i</em> indexing the observations, set to the closest cluster, ie. <span class="math inline">\(c^{(i)}= arg min_j |x^{(i)}-\mu_j|^2\)</span>. This sets the observation to the nearest cluster available. For every <em>j</em>, re-calculate the cluster means for each <span class="math inline">\(\mu_j\)</span> based on what data is currently assigned to each cluster.</p></li>
+</ol>
+</div>
+<div id="principal-component-analysis-pca" class="section level2">
+<h2>Principal Component Analysis (PCA)</h2>
+<p>Principal component analysis (PCA) is a form of analysis that seeks to <em>reduce</em> the dimensionality of a multivariate data set, hoping to reduce, say <span class="math inline">\(p=12\)</span> variables into two or three main components which are made up of the other variables. Furthermore, it is also possible using a PCA analysis to see what, if any, variables may be singly contributing to the variability of a data set. In this regard, a PCA analysis can be <em>elucidating</em> into the nature of the data set, and similarly has both predictive power (in the equations drawn up from the principal components), and an error estimator (in the error taken from not considering several components).</p>
+<p>The basis of PCA lies in the eigenvector-eigenvalue problem, namely:</p>
+<p><span class="math display">\[
+Ax=\lambda x
+\]</span></p>
+<p>Where we are seeking to find all <span class="math inline">\((\lambda_i,x_i)\)</span> pairs. Then by sorting the eigenvector/eigenvalues by the largest magnitude eigenvalues, we can calculate the amount of variability explained in an individual component by:</p>
+<p><span class="math display">\[
+\dfrac {\lambda_j} {\sum_{i} \lambda_{i}}
+\]</span> Further, the principal components have an equation of the form:</p>
+<p><span class="math display">\[
+Y_i = e_i'(x-\mu)
+\]</span> Often, a PCA analysis can explain 95% of the variability with just the top two principal components. However, this isn’t always the case – many times, PCA analyses offer little to no insight.</p>
+</div>
+<div id="multiple-linear-regression" class="section level2">
+<h2>Multiple Linear Regression</h2>
+<p>Linear regression models are formulated to estimate the linear dependence of variables. For example, a p-dimensional data set would be approximated as follows:</p>
+<p><span class="math display">\[
+y_i = \beta_0 + \beta_1 x_{1,i} + ... \beta_p x_{p,i}
+\]</span></p>
+<p>It also follows that:</p>
+<p><span class="math display">\[
+Y = X\beta + \epsilon
+\]</span> This can also be summarized as a series of vector-matrix operations, with <span class="math inline">\(X\)</span> denoting the design matix, which is the data matrix (minus the response) with a column of 1’s appended to the leftmost column:</p>
+<p><span class="math display">\[
+\beta = (X'X)^{-1}X'Y
+\]</span> Of course, <span class="math inline">\(\beta\)</span> is merely a point-estimate for the population parameter <span class="math inline">\(\beta\)</span>, and so there is some need to do bootstrapping to obtain distributional information about <span class="math inline">\(\beta\)</span>. Therefore, bootstrapping is implemented in the package.</p>
+<p>One particular problem that arises when bootstrapping is the issue of finding an ill-conditioned matrix. Once this occurs, there are a few options available:</p>
+<ol style="list-style-type: decimal">
+<li><p>try to approximately solve the system by perturbing the matrix in a small way that does not affect the solution too drastically, known as <em>preconditioning</em></p></li>
+<li><p>simply ignore the cases when the matrix is singular, and re-sample</p></li>
+<li><p>By using 2., get an initial distribution for <span class="math inline">\(\beta\)</span>, then re-run the bootstrap with the knowledge of the approximate, biased distribution of <span class="math inline">\(\beta\)</span>. Whenever a singular matrix is encountered, merely use the distribution to generation a random value for <span class="math inline">\(\beta\)</span> at that point. This can be iteratively tried again, but typically, <span class="math inline">\(n=3\)</span> tries is sufficient.</p></li>
+</ol>
+<p>In the function <code>bootreg</code>, the first choice is chosen. In particular, a technique known as the <em>preconditioned conjugate gradient method</em> is employed to approximately solve, in an iterative fashion, the equation: <span class="math inline">\((X'X)\beta=X'Y\)</span>, which is equivalent to finding <span class="math inline">\(\beta=(X'X)^{-1}X'Y\)</span>, which involves an expensive inverse calculation. A full discussion of the <em>preconditioned conjugate gradient method</em> is beyond the scope of this vignette, but in short, the psuedocode below sums it up:</p>
+<pre><code># For solving Ax=b, M is a 'preconditioner matrix'
+ro&lt;-b-Ax
+zo&lt;-inv(m) ro
+po&lt;-zo
+k&lt;-0
+while(k &lt; maximum_allowable_iterations){
+  alpha_k &lt;- rk'zk/(pk'Apk)
+  xk+1&lt;-xk+alpha_k pk
+  rk+1&lt;-rk-alpha_k A pk
+  if rk+1 is sufficiently small, exit loop
+  z_k+1&lt;-inv(M) rk+1
+  beta_k &lt;- zk+1'rk+1/zk'rk
+  pk+1&lt;-zk+1 + beta_k p_k
+  k&lt;-k+1
+}
+return xk+1 as result</code></pre>
+<p>where <span class="math inline">\(M\)</span> is a <em>magical preconditioner matrix</em>, which is generally generated by an <em>incomplete cholesky factorization</em>, which itself may be generated using the following pseudo code:</p>
+<pre><code>function a = ichol(a)
+    n = size(a,1);
+
+    for k=1:n
+        a(k,k) = sqrt(a(k,k));
+        for i=(k+1):n
+            if (a(i,k)!=0)
+                a(i,k) = a(i,k)/a(k,k);            
+            endif
+        endfor
+        for j=(k+1):n
+            for i=j:n
+                if (a(i,j)!=0)
+                    a(i,j) = a(i,j)-a(i,k)*a(j,k);  
+                endif
+            endfor
+        endfor
+    endfor
+
+    for i=1:n
+        for j=i+1:n
+            a(i,j) = 0;
+        endfor
+    endfor            
+endfunction</code></pre>
+<p>The power of multilinear regression, like the other methods, is that it offers:</p>
+<ul>
+<li>an error estimator, in the form of <span class="math inline">\(\epsilon_i = |y_i-\hat{y_i}|\)</span></li>
+<li>predictive power, in the form of <span class="math inline">\(\hat{Y}=X\beta\)</span></li>
+</ul>
+<p>With this information, we are able to move onto the implementation details.</p>
+<p>One other important point is in the creation of a weighted least squares formulation, which is comparable to multilinear regression, but rather the point estimate for <span class="math inline">\(\beta\)</span> is:</p>
+<p><span class="math display">\[
+\beta = (X'WX)^{-1}X'WY
+\]</span></p>
+<p>where <span class="math inline">\(W\)</span> represents a diagonal matrix that is the inverse of the expected variances within each term. This becomes particularly important whenever there exists an error that is not normally distributed with a constant variance, as is the assumption in ordinary linear regression. Typically, weighted least squares regression models are more well formed, but only if the weights are chosen in a logical, consistent way.</p>
+</div>
+</div>
+<div id="functions-in-ggfast" class="section level1">
+<h1>Functions in ggfast</h1>
+<div id="kmeans-clustering-1" class="section level2">
+<h2>Kmeans clustering</h2>
+<p>The (current) functionality of <em>ggfast</em> included is:</p>
+<ol style="list-style-type: decimal">
+<li>Cluster reduction/write to file function.</li>
+</ol>
+<p>Writes to a .csv file the output of a cluster reduction, up to a given k.</p>
+<p>Implementation:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#'</span>
+<span class="co">#' Reduce the amount of data through using kmeans clustering algorithm</span>
+<span class="co">#' Call the in R kmean cluster function in order to reduce a pool of data into a few, clustered points</span>
+<span class="co">#'</span>
+<span class="co">#' @param x Data in the form of a data frame or data matrix, for safety, please use data.matrix(...) as a wrapper</span>
+<span class="co">#' @param k Number of clusters to form</span>
+<span class="co">#' @param fileName Name of file you wish to save a .csv formatted file to</span>
+<span class="co">#' @param iter.max Number of iterations to use at a maximum (default = 10)</span>
+<span class="co">#' @param nstart How many random sets to be chosen</span>
+<span class="co">#' @param algorithm What algorithm to use (default=&quot;Lloyd&quot;).</span>
+<span class="co">#'                  choices include: &quot;Hartigan-Wong&quot;, &quot;LLoyd&quot;, &quot;MacQueen&quot;, and &quot;Forgy&quot;</span>
+<span class="co">#' @param trace logical or integer number, currently only used in the default method (&quot;Hartigan-Wong&quot;):</span>
+<span class="co">#'  if positive (or true), tracing information on the progress of the algorithm is produced.</span>
+<span class="co">#'  Higher values may produce more tracing information.</span>
+<span class="co">#'</span>
+<span class="co">#'  @examples</span>
+<span class="co">#'  reduce_cluster(data.matrix(iris), 10, &quot;myFile.csv&quot;)</span>
+<span class="co">#'  reduce_cluster(df, 15, &quot;myManyIterationsFile.csv&quot;, iter.max=1000, algorithm=&quot;MacQueen&quot;)</span>
+<span class="co">#'</span>
+reduce_cluster&lt;-function(x, k, fileName, <span class="dt">iter.max =</span> <span class="dv">10</span>, <span class="dt">nstart =</span> <span class="dv">1</span>, <span class="dt">algorithm=</span><span class="st">&quot;Lloyd&quot;</span>, <span class="dt">trace =</span> <span class="ot">FALSE</span>)
+{
+  <span class="co"># perform cluster analysis to find means of each cluster group</span>
+  cl&lt;-<span class="kw">kmeans</span>(x,k,<span class="dt">iter.max=</span>iter.max,<span class="dt">nstart=</span>nstart,<span class="dt">algorithm=</span>algorithm,<span class="dt">trace=</span>trace)
+  reduced_data&lt;-cl$centers
+
+  <span class="co"># write output data in the form of a .csv file</span>
+  <span class="kw">write.csv</span>(reduced_data, fileName)
+
+}</code></pre></div>
+<p>Examples:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">reduce_cluster</span>(<span class="kw">data.matrix</span>(iris), <span class="dv">10</span>, <span class="st">&quot;output.csv&quot;</span>)</code></pre></div>
+<ol start="2" style="list-style-type: decimal">
+<li>The ability to visualize the reduced data, on top of the original data:</li>
+</ol>
+<p>Implementation:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#'</span>
+<span class="co">#' Visualize the amount of data reduction in the first component from using clustering</span>
+<span class="co">#' This verifies that the clustering analysis can be of some use for data reduction</span>
+<span class="co">#'</span>
+<span class="co">#' @param x Data in the form of a data frame or data matrix, for safety, please use data.matrix(...) as a wrapper</span>
+<span class="co">#' @param k Number of clusters to form</span>
+<span class="co">#'</span>
+<span class="co">#' @examples</span>
+<span class="co">#' visualize_reduction(data.matrix(iris), 19)</span>
+visualize_reduction&lt;-function(x,k)
+{
+  cl&lt;-<span class="kw">kmeans</span>(x,k)
+  reduced_data&lt;-cl$centers
+  <span class="kw">windows</span>()
+  <span class="kw">plot</span>(x)
+  <span class="kw">points</span>(reduced_data,<span class="dt">col=</span><span class="st">&quot;Blue&quot;</span>, <span class="dt">add=</span><span class="ot">TRUE</span>)
+}</code></pre></div>
+<p>Examples:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">visualize_reduction</span>(<span class="kw">data.matrix</span>(iris),<span class="dv">15</span>)</code></pre></div>
+<ol start="3" style="list-style-type: decimal">
+<li>A detailed analysis on the impact of the choice of k, along with several other useful analyses.</li>
+</ol>
+<p>Implementation:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#'</span>
+<span class="co">#' Perform the types of anaylsis which do a reduction on the data set,</span>
+<span class="co">#' finding the optimum value of k</span>
+<span class="co">#'</span>
+<span class="co">#' NOTE: by default, this will perform the analysis on the scaled data</span>
+<span class="co">#'</span>
+<span class="co">#' @param x Data in the form of a data frame or data matrix, for safety, please use data.matrix(...) as a wrapper</span>
+<span class="co">#' @param kmax (=10) Maximum number of clusters to form</span>
+<span class="co">#' @param elbowPlotFileName (=&quot;elbowPlot.jpeg&quot;), name of file for elbow plot output</span>
+<span class="co">#' @param silhouetteFileName (=&quot;silhouette.jpeg&quot;), name of file for silhouette plot output</span>
+<span class="co">#' @param gapFileName (=&quot;gap.jpeg&quot;), name of file for output of gap statistics plot</span>
+<span class="co">#' @param iter.max (=100) Maximum number of iterations</span>
+<span class="co">#' @param nstart How many random sets to be chosen</span>
+<span class="co">#' @param algorithm What algorithm to use (default=&quot;Lloyd&quot;).</span>
+<span class="co">#'                  choices include: &quot;Hartigan-Wong&quot;, &quot;LLoyd&quot;, &quot;MacQueen&quot;, and &quot;Forgy&quot;</span>
+<span class="co">#' @param trace logical or integer number, currently only used in the default method (&quot;Hartigan-Wong&quot;):</span>
+<span class="co">#'  if positive (or true), tracing information on the progress of the algorithm is produced.</span>
+<span class="co">#'  Higher values may produce more tracing information.</span>
+<span class="co">#' @param debugOutput (=FALSE) Boolean value for whether or not to output silhouette plots for</span>
+<span class="co">#' each and every cluster value used. This generates a TON of output! YOU HAVE BEEN WARNED!</span>
+<span class="co">#' @param debugOutFileNameBase (=&quot;sil&quot;) Base file name for debug output, if enabled.</span>
+<span class="co">#'</span>
+<span class="co">#' @examples</span>
+<span class="co">#' cluster_k_analysis(data.matrix(iris), kmax=19)</span>
+<span class="co">#' cluster_k_analysis(data.matrix(iris), kmax=19, iter.max=200, debugOutput=T)</span>
+cluster_k_analysis&lt;-function(x,
+                             <span class="dt">kmax=</span><span class="dv">10</span>,
+                             <span class="dt">elbowPlotFileName =</span> <span class="st">&quot;elbowPlot.jpeg&quot;</span>,
+                             <span class="dt">silhouetteFileName =</span> <span class="st">&quot;silhouette.jpeg&quot;</span>,
+                             <span class="dt">gapFileName =</span> <span class="st">&quot;gap.jpeg&quot;</span>,
+                             <span class="dt">iter.max =</span> <span class="dv">100</span>,
+                             <span class="dt">nstart =</span> <span class="dv">1</span>,
+                             <span class="dt">algorithm=</span><span class="st">&quot;Lloyd&quot;</span>,
+                             <span class="dt">trace =</span> <span class="ot">FALSE</span>,
+                             <span class="dt">debugOutput=</span><span class="ot">FALSE</span>,
+                             <span class="dt">debugOutFileNameBase=</span><span class="st">&quot;sil&quot;</span>)
+{
+  <span class="co"># normalize the data</span>
+  x&lt;-<span class="kw">scale</span>(x)
+  wss&lt;-function(k){
+    <span class="kw">kmeans</span>(x,k,iter.max,nstart,algorithm,trace)$tot.withinss
+  }
+
+  <span class="co"># Compute from k = 1 to k = n</span>
+  n =<span class="st"> </span><span class="kw">dim</span>(x)[<span class="dv">1</span>]-<span class="dv">1</span>
+  k.values &lt;-<span class="st"> </span><span class="dv">2</span> :<span class="st"> </span>kmax
+
+  <span class="co"># extract wss for 2-n clusters</span>
+  wss_values&lt;-purrr::<span class="kw">map_dbl</span>(k.values,wss)
+
+  <span class="co"># Output the 'elbow plot' approach to determining the ideal</span>
+  <span class="co"># number of clusters to use in this type of analysis</span>
+  <span class="kw">jpeg</span>(elbowPlotFileName)
+
+  <span class="co"># make a plot</span>
+  <span class="kw">plot</span>(k.values, wss_values,
+       <span class="dt">type=</span><span class="st">&quot;b&quot;</span>, <span class="dt">pch =</span> <span class="dv">19</span>, <span class="dt">frame =</span> <span class="ot">FALSE</span>,
+       <span class="dt">xlab=</span><span class="st">&quot;Number of clusters K&quot;</span>,
+       <span class="dt">ylab=</span><span class="st">&quot;Total within-clusters sum of squares&quot;</span>)
+
+  <span class="kw">dev.off</span>()
+
+  <span class="co"># function to compute average silhouette for k clusters</span>
+  avg_sil &lt;-<span class="st"> </span>function(k) {
+    km.res &lt;-<span class="st"> </span><span class="kw">kmeans</span>(x, <span class="dt">centers =</span> k, <span class="dt">nstart =</span> <span class="dv">25</span>)
+    ss &lt;-<span class="st"> </span>cluster::<span class="kw">silhouette</span>(km.res$cluster, <span class="kw">dist</span>(x))
+    if(debugOutput){
+      name=<span class="kw">paste</span>(debugOutFileNameBase, k, <span class="st">&quot;.jpeg&quot;</span>, <span class="dt">sep=</span><span class="st">&quot;&quot;</span>)
+      <span class="kw">jpeg</span>(name)
+      <span class="kw">plot</span>(ss)
+      <span class="kw">dev.off</span>()
+    }
+    <span class="kw">mean</span>(ss[,<span class="dv">3</span>])
+  }
+
+  avg_sil_values &lt;-<span class="st"> </span>purrr::<span class="kw">map</span>(k.values, avg_sil)
+
+  <span class="kw">jpeg</span>(silhouetteFileName)
+  <span class="kw">plot</span>(k.values, avg_sil_values,
+       <span class="dt">type =</span> <span class="st">&quot;b&quot;</span>, <span class="dt">pch =</span> <span class="dv">19</span>, <span class="dt">frame =</span> <span class="ot">FALSE</span>,
+       <span class="dt">xlab =</span> <span class="st">&quot;Number of clusters K&quot;</span>,
+       <span class="dt">ylab =</span> <span class="st">&quot;Average Silhouettes&quot;</span>)
+  <span class="kw">dev.off</span>()
+
+  gap_stat&lt;-cluster::<span class="kw">clusGap</span>(x,<span class="dt">FUN=</span>kmeans, <span class="dt">nstart=</span>nstart, <span class="dt">K.max=</span>kmax, <span class="dt">B=</span><span class="dv">50</span>)
+  <span class="kw">jpeg</span>(gapFileName)
+  <span class="kw">plot</span>(gap_stat, <span class="dt">xlab=</span><span class="st">&quot;Number of clusters k&quot;</span>)
+  <span class="kw">dev.off</span>()
+
+  <span class="kw">list</span>(<span class="dt">GapStatistics =</span> gap_stat)
+}</code></pre></div>
+<p>Examples:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cluster_k_analysis</span>(<span class="kw">data.matrix</span>(iris), <span class="dt">kmax=</span><span class="dv">19</span>, <span class="dt">iter.max=</span><span class="dv">200</span>, <span class="dt">debugOutput=</span>T)</code></pre></div>
+</div>
+<div id="principal-component-analysis" class="section level2">
+<h2>Principal Component Analysis</h2>
+<p>The current functioanlity of <em>ggfast</em> currently includes:</p>
+<ol style="list-style-type: decimal">
+<li>Determining greatest factors, and % of variability explained with <span class="math inline">\(k\)</span> factors:</li>
+</ol>
+<p>Implementation:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#'</span>
+<span class="co">#' Determine greatest data factors</span>
+<span class="co">#' @param x Data set to be analyzes</span>
+<span class="co">#' @param k Number of components considered</span>
+<span class="co">#'</span>
+<span class="co">#' @examples</span>
+<span class="co">#' determine_greatest_contributors(data.matrix(iris), 2)</span>
+<span class="co">#'</span>
+determine_greatest_contributors&lt;-function(x, k)
+{
+  x&lt;-<span class="kw">scale</span>(x)
+  S&lt;-<span class="kw">cov</span>(x)
+  eig_res&lt;-<span class="kw">eigen</span>(S)
+
+  lambda_sum =<span class="st"> </span><span class="kw">sum</span>(eig_res$value)
+  n =<span class="st"> </span><span class="kw">length</span>(eig_res$value)
+  prop&lt;-<span class="kw">matrix</span>(<span class="ot">NA</span>, <span class="dt">nr=</span>n)
+  for(i in <span class="dv">1</span> :<span class="st"> </span>n){
+    prop[i]=eig_res$value[i]/lambda_sum
+  }
+
+  err&lt;-<span class="dv">1</span>-<span class="kw">sum</span>(prop[<span class="dv">1</span>:k])
+
+  <span class="kw">list</span>(<span class="dt">EigenValues =</span> eig_res$value, <span class="dt">EigenvalueSum=</span> lambda_sum, <span class="dt">Proportions=</span>prop, <span class="dt">Error=</span>err, <span class="dt">EigenVectors=</span>eig_res$vectors)
+}</code></pre></div>
+<p>Examples:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">determine_greatest_contributors</span>(<span class="kw">data.matrix</span>(iris), <span class="dv">2</span>)</code></pre></div>
+<ol start="2" style="list-style-type: decimal">
+<li>Run a PCA analysis, showing the components, as well as a built in clustering analysis.</li>
+</ol>
+<p>Implementation:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#'</span>
+<span class="co">#' After calling whatever means of cluster reductions, now do a PCA</span>
+<span class="co">#' on the already reduced data set.</span>
+<span class="co">#'</span>
+<span class="co">#' @param x Data set to be analyzed</span>
+<span class="co">#' @param k Number of components considerd</span>
+<span class="co">#' @param barPlotFileName (=&quot;barPlotComp.jpeg&quot;) file name used to store bar plot output</span>
+<span class="co">#'</span>
+PCAPlot&lt;-function(x, k, <span class="dt">barPlotFileName=</span><span class="st">&quot;barPlotComp.jpeg&quot;</span>)
+{
+  unscaled&lt;-x <span class="co"># keep a local copy for later</span>
+  x&lt;-<span class="kw">scale</span>(x)
+  pca&lt;-<span class="kw">determine_greatest_contributors</span>(x,k)
+  PC&lt;-x%*%<span class="st"> </span>pca$EigenVectors
+  Component&lt;-<span class="kw">colnames</span>(x)
+  Proportion&lt;-pca$Proportions
+  Errors&lt;-<span class="dv">1</span>-pca$Proportions
+  df&lt;-<span class="kw">data.frame</span>(Component,Proportion,Errors)
+
+  theme&lt;-ggplot2::<span class="kw">theme_set</span>(cowplot::<span class="kw">theme_cowplot</span>()) +<span class="st"> </span>ggplot2::<span class="kw">theme</span>(<span class="dt">legend.position=</span><span class="st">&quot;none&quot;</span>)
+  g&lt;-ggpubr::<span class="kw">ggbarplot</span>(df, <span class="dt">x=</span><span class="st">&quot;Component&quot;</span>, <span class="dt">y=</span><span class="st">&quot;Proportion&quot;</span>, <span class="dt">fill=</span><span class="st">&quot;Component&quot;</span>,<span class="dt">palette=</span><span class="st">&quot;jco&quot;</span>,<span class="dt">ggtheme=</span>theme, <span class="dt">sort.val=</span><span class="st">&quot;desc&quot;</span>)
+  p&lt;-ggpubr::<span class="kw">ggbarplot</span>(df, <span class="dt">x=</span><span class="st">&quot;Component&quot;</span>, <span class="dt">y=</span><span class="st">&quot;Errors&quot;</span>, <span class="dt">fill=</span><span class="st">&quot;Component&quot;</span>, <span class="dt">palette=</span><span class="st">&quot;jco&quot;</span>,<span class="dt">ggtheme=</span>theme, <span class="dt">sort.val=</span><span class="st">&quot;desc&quot;</span>)
+  graph&lt;-cowplot::<span class="kw">plot_grid</span>(g,p)
+  cowplot::<span class="kw">save_plot</span>(barPlotFileName, graph, <span class="dt">base_aspect_ratio=</span><span class="fl">3.0</span>)
+
+  <span class="co"># Now, in the case of k = 1,2, or 3, we can visualize the data and apply SLR on it</span>
+  data&lt;-<span class="kw">cbind</span>(Component, Proportion)
+  data&lt;-data[<span class="kw">order</span>(-Proportion),]
+
+  <span class="co"># Take the top k parts only</span>
+  names&lt;-data[(<span class="dv">1</span>:k),<span class="dv">1</span>]
+  <span class="co">#print(data)</span>
+  <span class="kw">print</span>(names)
+  reduced_scaled_data_set&lt;-<span class="kw">subset</span>(x, <span class="dt">select=</span>names) <span class="co"># Additionally have the option of outputting the data</span>
+
+  reduced_unscaled_data_set&lt;-<span class="kw">subset</span>(x, <span class="dt">select=</span>names)
+  df&lt;-reshape2::<span class="kw">melt</span>(reduced_unscaled_data_set)
+
+  if(k ==<span class="st"> </span><span class="dv">2</span>){
+    <span class="kw">windows</span>()
+    <span class="kw">plot</span>(reduced_unscaled_data_set,
+         <span class="dt">main=</span><span class="st">&quot;Reduced Data Set Scatter Plot&quot;</span>,
+         <span class="dt">xlab=</span><span class="kw">colnames</span>(reduced_unscaled_data_set)[<span class="dv">1</span>],
+         <span class="dt">ylab=</span><span class="kw">colnames</span>(reduced_unscaled_data_set)[<span class="dv">2</span>])
+
+    <span class="co"># After performing this analysis, we can also do a cluster analysis</span>
+    <span class="co"># Typically, k = 5 clusters is an appropriate enough choice for now</span>
+    k =<span class="st"> </span><span class="dv">5</span>
+    clus&lt;-<span class="kw">kmeans</span>(reduced_unscaled_data_set,<span class="dt">centers=</span>k)
+    <span class="kw">windows</span>()
+    cluster::<span class="kw">clusplot</span>(reduced_unscaled_data_set, clus$cluster)
+  }
+
+  <span class="co"># Additional plot -- look at the clusplot for all of the data</span>
+  k =<span class="st"> </span><span class="dv">5</span>
+  clus&lt;-<span class="kw">kmeans</span>(x, <span class="dt">centers=</span>k)
+  <span class="kw">windows</span>()
+  cluster::<span class="kw">clusplot</span>(x, clus$cluster)
+
+  <span class="co"># We may now extend this into three dimensions instead</span>
+  kdf&lt;-<span class="kw">kmeans</span>(x,<span class="dv">4</span>)
+  newdf&lt;-<span class="kw">data.frame</span>(x, <span class="dt">K=</span>kdf$cluster)
+  pcdf&lt;-<span class="kw">princomp</span>(x,<span class="dt">cor=</span>T,<span class="dt">score=</span>T)
+  <span class="kw">summary</span>(pcdf)
+  rgl::<span class="kw">plot3d</span>(pcdf$scores, <span class="dt">col=</span>newdf$K)
+
+}</code></pre></div>
+<p>Examples:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">PCAPlot</span>(<span class="kw">data.matrix</span>(iris), <span class="dv">2</span>)</code></pre></div>
+</div>
+<div id="multiple-linear-regresion" class="section level2">
+<h2>Multiple Linear Regresion</h2>
+<ol style="list-style-type: decimal">
+<li>We need a function that implements the ability to solve the equation <span class="math inline">\((X'X)\beta=X'Y\)</span>.</li>
+</ol>
+<p>Implementation:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#'</span>
+<span class="co">#' Point estimate for beta, used in linear regression</span>
+<span class="co">#'</span>
+<span class="co">#' Notice that this is done by solving the linear system:</span>
+<span class="co">#' (X'X) beta = X'Y</span>
+<span class="co">#'</span>
+<span class="co">#' Rather than using a direct method, ie.</span>
+<span class="co">#'</span>
+<span class="co">#' beta = (X'X)^(-1)X'Y</span>
+<span class="co">#'</span>
+<span class="co">#' We shall instead use a package known as 'pcig' that solves</span>
+<span class="co">#' a pre-conditioned conjugate gradient formulation, and is more</span>
+<span class="co">#' numerically stable whenever the matrix approaches singularity.</span>
+<span class="co">#'</span>
+<span class="co">#' @param X Design matrix</span>
+<span class="co">#' @param Y Response vector</span>
+<span class="co">#' @examples</span>
+<span class="co">#' betah(matrix(c(1,2,3,4,5,6), nr=3, byrow=TRUE),</span>
+<span class="co">#'       matrix(c(1,2,3), nr=3))</span>
+<span class="co">#'</span>
+betah&lt;-function(X,Y){
+  if(!<span class="kw">require</span>(<span class="st">&quot;pcg&quot;</span>)) <span class="kw">install.packages</span>(<span class="st">&quot;pcg&quot;</span>)
+  pcg::<span class="kw">pcg</span>(<span class="kw">t</span>(X)%*%X, <span class="kw">t</span>(X)%*%Y)
+}</code></pre></div>
+<p>Examples:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">betah</span>(<span class="kw">matrix</span>(<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>), <span class="dt">nr=</span><span class="dv">3</span>, <span class="dt">byrow=</span><span class="ot">TRUE</span>),
+      <span class="kw">matrix</span>(<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>), <span class="dt">nr=</span><span class="dv">3</span>))</code></pre></div>
+<ol start="2" style="list-style-type: decimal">
+<li>A method that appends 1 column of 1’s to convert a data matrix into a design matrix</li>
+</ol>
+<p>Implementation:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#'</span>
+<span class="co">#' Prepare the data matrix by appending a column of 1's top it</span>
+<span class="co">#' @param df Data frame, minus the response</span>
+<span class="co">#' @examples</span>
+<span class="co">#' append_design_matrix(matrix(c(1,2,3,4,5,6), nr=2, byrow=TRUE))</span>
+<span class="co">#'</span>
+<span class="co">#' df&lt;-iris</span>
+<span class="co">#' df&lt;-df[,2:dim(df)[2]] # remove first column, using it as the response vector</span>
+<span class="co">#' append_design_matrix(df)</span>
+<span class="co">#'</span>
+append_design_matrix&lt;-function(df){
+
+  <span class="co"># strip off non numeric data</span>
+  df&lt;-df[,<span class="kw">sapply</span>(df, is.numeric)]
+  X&lt;-<span class="kw">matrix</span>(<span class="ot">NA_real_</span>, <span class="dt">nr=</span><span class="kw">dim</span>(df)[<span class="dv">1</span>], <span class="dt">nc=</span><span class="kw">dim</span>(df)[<span class="dv">2</span>]+<span class="dv">1</span>, <span class="dt">byrow=</span><span class="ot">TRUE</span>)
+  X[,<span class="dv">1</span>] =<span class="st"> </span><span class="fl">1.0</span>
+  for(i in <span class="dv">1</span> :<span class="st"> </span><span class="kw">dim</span>(df)[<span class="dv">2</span>]){
+    for(j in <span class="dv">1</span> :<span class="st"> </span><span class="kw">dim</span>(df)[<span class="dv">1</span>]){
+      X[j,i<span class="dv">+1</span>] =<span class="st"> </span>df[j,i]
+    }
+  }
+  <span class="kw">return</span> (X)
+}</code></pre></div>
+<p>Examples:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">append_design_matrix</span>(<span class="kw">matrix</span>(<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">4</span>,<span class="dv">5</span>,<span class="dv">6</span>), <span class="dt">nr=</span><span class="dv">2</span>, <span class="dt">byrow=</span><span class="ot">TRUE</span>))
+
+df&lt;-iris
+df&lt;-df[,<span class="dv">2</span>:<span class="kw">dim</span>(df)[<span class="dv">2</span>]] <span class="co"># remove first column, using it as the response vector</span>
+<span class="kw">append_design_matrix</span>(df)</code></pre></div>
+<ol start="3" style="list-style-type: decimal">
+<li>A method to do bootstrap to find confidence intervals on <span class="math inline">\(\beta\)</span> values.</li>
+</ol>
+<p>Implementation:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#'</span>
+<span class="co">#' Perform boot strapping</span>
+<span class="co">#' @param Y response vector</span>
+<span class="co">#' @param X design matrix</span>
+<span class="co">#' @param iter(=1) number of iterations to run bootstrap</span>
+<span class="co">#' @param alpha (=0.05) significance level for generating confidence intervals</span>
+<span class="co">#' @examples</span>
+<span class="co">#' df&lt;-iris</span>
+<span class="co">#'</span>
+<span class="co">#' # scrape off all non-numeric data first</span>
+<span class="co">#' df&lt;-df[,sapply(df, is.numeric)]</span>
+<span class="co">#' df</span>
+<span class="co">#' X&lt;-df[,-1]</span>
+<span class="co">#' Y&lt;-as.matrix(df[,1])</span>
+<span class="co">#' X</span>
+<span class="co">#' Y</span>
+<span class="co">#' dim(X)</span>
+<span class="co">#' dim(Y)</span>
+<span class="co">#' X&lt;-append_design_matrix(X)</span>
+<span class="co">#' dim(X)</span>
+<span class="co">#' bh=bootreg(Y,X,1000) # works just fine! Whoo!</span>
+<span class="co">#' bh</span>
+bootreg=function(Y,X,<span class="dt">iter=</span><span class="dv">1</span>, <span class="dt">alpha =</span> <span class="fl">0.05</span>)
+{
+  n=<span class="kw">dim</span>(X)[<span class="dv">1</span>]
+  <span class="co"># n is the number of rows</span>
+  nb=<span class="kw">dim</span>(X)[<span class="dv">2</span>]
+  <span class="co"># nb is the number of columns and is equal to number of betas to be estimated</span>
+  beta.mat=<span class="kw">matrix</span>(<span class="ot">NA_real_</span>,<span class="dt">nrow =</span> nb,<span class="dt">ncol=</span>iter)
+  index.mat=<span class="kw">matrix</span>(<span class="ot">NA_real_</span>,<span class="dt">nrow=</span>n,<span class="dt">ncol=</span>iter,<span class="dt">byrow=</span><span class="ot">FALSE</span>)
+  for(i in <span class="dv">1</span>:iter)
+  {
+    index.mat[,i] =<span class="st"> </span><span class="kw">sample</span>(<span class="dv">1</span>:n,n,<span class="dt">replace=</span><span class="ot">TRUE</span>)
+    <span class="co">#index.mat will be a matrix of random indices</span>
+    X.iter&lt;-<span class="kw">matrix</span>(<span class="ot">NA_real_</span>, <span class="dt">nrow=</span>n, <span class="dt">ncol =</span> nb, <span class="dt">byrow=</span><span class="ot">TRUE</span>)
+    Y.iter&lt;-<span class="kw">matrix</span>(<span class="ot">NA_real_</span>, <span class="dt">nrow=</span>n, <span class="dt">ncol =</span> <span class="dv">1</span>, <span class="dt">byrow =</span> <span class="ot">TRUE</span>)
+    for(j in <span class="dv">1</span> :<span class="st"> </span>n){
+      X.iter[j,] =<span class="st"> </span>X[index.mat[j,i],]
+      Y.iter[j,<span class="dv">1</span>] =<span class="st"> </span>Y[index.mat[j,i]]
+    }
+    beta.mat[,i]=<span class="st"> </span><span class="kw">betah</span>(X.iter, Y.iter)
+    <span class="co">#beta.mat is a matrix filled with bootstrap beta estimates</span>
+  }
+  <span class="kw">layout</span>(<span class="kw">matrix</span>(<span class="dv">1</span>:nb, <span class="dt">nr=</span>nb,<span class="dt">nc=</span><span class="dv">1</span>,<span class="dt">byrow=</span><span class="ot">TRUE</span>))
+  CIs =<span class="st"> </span><span class="kw">c</span>();
+  for(i in <span class="dv">1</span>:nb)
+  {
+    j=i<span class="dv">-1</span>
+    CI =<span class="st"> </span><span class="kw">quantile</span>(beta.mat[i,], <span class="kw">c</span>(alpha, <span class="dv">1</span>-alpha))
+    CIs =<span class="st"> </span><span class="kw">c</span>(CIs, CI)
+    <span class="kw">hist</span>(beta.mat[i,],<span class="dt">freq=</span><span class="ot">FALSE</span>,
+         <span class="dt">ylab=</span><span class="st">&quot;Density&quot;</span>  , <span class="dt">main=</span><span class="kw">substitute</span>(beta[j]),
+         <span class="dt">xlab =</span> <span class="kw">substitute</span>(beta[j]))
+    <span class="kw">mtext</span>(<span class="kw">paste</span>(<span class="st">&quot;CI = (&quot;</span>, <span class="kw">round</span>(CI[<span class="dv">1</span>],<span class="dv">4</span>), <span class="st">&quot;,&quot;</span>,<span class="kw">round</span>(CI[<span class="dv">2</span>],<span class="dv">4</span>),<span class="st">&quot;)&quot;</span> ), <span class="dt">cex=</span><span class="fl">0.6</span>)
+  }
+
+
+  <span class="kw">list</span>(<span class="dt">bh=</span>beta.mat, <span class="dt">Y=</span>Y,<span class="dt">X=</span>X, <span class="dt">Confidence_Intervals =</span> CIs)
+}</code></pre></div>
+<p>Examples:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">df&lt;-iris
+<span class="co"># scrape off all non-numeric data first</span>
+df&lt;-df[,<span class="kw">sapply</span>(df, is.numeric)]
+df
+X&lt;-df[,-<span class="dv">1</span>]
+Y&lt;-<span class="kw">as.matrix</span>(df[,<span class="dv">1</span>])
+X
+Y
+<span class="kw">dim</span>(X)
+<span class="kw">dim</span>(Y)
+X&lt;-<span class="kw">append_design_matrix</span>(X)
+<span class="kw">dim</span>(X)
+bh=<span class="kw">bootreg</span>(Y,X,<span class="dv">1000</span>) <span class="co"># works just fine! Whoo!</span>
+bh</code></pre></div>
+<ol start="4" style="list-style-type: decimal">
+<li>Predict information for a given design matrix subset based on the results of boostrapping.</li>
+</ol>
+<p>Implementation:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># Some other cools ideas: add in a predictor method</span>
+
+<span class="co">#'</span>
+<span class="co">#' Predict the next value using the same multilinear regression model</span>
+<span class="co">#'</span>
+<span class="co">#' @param X design matrix</span>
+<span class="co">#' @param model the result of running bootreg on the data set, ie. a great big collection</span>
+<span class="co">#' of different betas, upon which the column mean is used to get the most accurate possible</span>
+<span class="co">#' estimate for beta</span>
+<span class="co">#' @examples</span>
+<span class="co">#' # predict a singular value, given the description of the linear model and the design matrix of the new points</span>
+<span class="co">#' df&lt;-iris</span>
+<span class="co">#'</span>
+<span class="co">#' # scrape off all non-numeric data first</span>
+<span class="co">#' df&lt;-df[,sapply(df, is.numeric)]</span>
+<span class="co">#' df</span>
+<span class="co">#' X&lt;-df[,-1]</span>
+<span class="co">#' Y&lt;-as.matrix(df[,1])</span>
+<span class="co">#' X</span>
+<span class="co">#' Y</span>
+<span class="co">#' dim(X)</span>
+<span class="co">#' dim(Y)</span>
+<span class="co">#' X&lt;-append_design_matrix(X)</span>
+<span class="co">#' dim(X)</span>
+<span class="co">#' bh=bootreg(Y,X,1000) # works just fine! Whoo!</span>
+<span class="co">#' data.matrix(rowMeans(bh$bh))</span>
+<span class="co">#' predictor(matrix(c(1, 2, 2, 3), nr=1), bh)</span>
+<span class="co">#'</span>
+predictor&lt;-function(X, model){
+  betas =<span class="st"> </span>model$bh
+
+  <span class="co"># Use the point estimate for the mean of the betas</span>
+  beta_means&lt;-<span class="kw">data.matrix</span>(<span class="kw">rowMeans</span>(betas))
+
+  <span class="co"># Y = Xbeta</span>
+  X%*%beta_means
+
+}</code></pre></div>
+<p>Examples:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">df&lt;-iris
+<span class="co"># scrape off all non-numeric data first</span>
+df&lt;-df[,<span class="kw">sapply</span>(df, is.numeric)]
+df
+X&lt;-df[,-<span class="dv">1</span>]
+Y&lt;-<span class="kw">as.matrix</span>(df[,<span class="dv">1</span>])
+X
+Y
+<span class="kw">dim</span>(X)
+<span class="kw">dim</span>(Y)
+X&lt;-<span class="kw">append_design_matrix</span>(X)
+<span class="kw">dim</span>(X)
+bh=<span class="kw">bootreg</span>(Y,X,<span class="dv">1000</span>) <span class="co"># works just fine! Whoo!</span>
+<span class="kw">data.matrix</span>(<span class="kw">rowMeans</span>(bh$bh))
+<span class="kw">predictor</span>(<span class="kw">matrix</span>(<span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">2</span>, <span class="dv">3</span>), <span class="dt">nr=</span><span class="dv">1</span>), bh)</code></pre></div>
+<p>And the equivalent methods for weighted least squares:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#'</span>
+<span class="co">#' Point estimate for beta, used in linear regression</span>
+<span class="co">#'</span>
+<span class="co">#' Notice that this is done by solving the linear system:</span>
+<span class="co">#' (X'WX) beta = X'WY</span>
+<span class="co">#'</span>
+<span class="co">#' Rather than using a direct method, ie.</span>
+<span class="co">#'</span>
+<span class="co">#' beta = (X'WX)^(-1)X'WY</span>
+<span class="co">#'</span>
+<span class="co">#' We shall instead use a package known as 'pcig' that solves</span>
+<span class="co">#' a pre-conditioned conjugate gradient formulation, and is more</span>
+<span class="co">#' numerically stable whenever the matrix approaches singularity.</span>
+<span class="co">#'</span>
+<span class="co">#' @param X Design matrix</span>
+<span class="co">#' @param Y Response vector</span>
+<span class="co">#' @param W weightt matrix</span>
+<span class="co">#' @examples</span>
+<span class="co">#' betah(matrix(c(1,2,3,4,5,6), nr=3, byrow=TRUE),</span>
+<span class="co">#'       matrix(c(1,2,3), nr=3).</span>
+<span class="co">#'       matrix(c(1.7,0,0,0.5), nr =2, byrow=TRUE))</span>
+<span class="co">#'</span>
+betah_wls&lt;-function(X,Y,W){
+  if(!<span class="kw">require</span>(<span class="st">&quot;pcg&quot;</span>)) <span class="kw">install.packages</span>(<span class="st">&quot;pcg&quot;</span>)
+  pcg::<span class="kw">pcg</span>(<span class="kw">t</span>(X)%*%W%*%X, <span class="kw">t</span>(X)%*%W%*%Y)
+}
+
+<span class="co">#'</span>
+<span class="co">#' Perform boot strapping</span>
+<span class="co">#' @param Y response vector</span>
+<span class="co">#' @param X design matrix</span>
+<span class="co">#' @param W weight matrix</span>
+<span class="co">#' @param iter(=1) number of iterations to run bootstrap</span>
+<span class="co">#' @param alpha (=0.05) significance level for generating confidence intervals</span>
+<span class="co">#' @examples</span>
+<span class="co">#' df&lt;-iris</span>
+<span class="co">#'</span>
+<span class="co">#' # scrape off all non-numeric data first</span>
+<span class="co">#' df&lt;-df[,sapply(df, is.numeric)]</span>
+<span class="co">#' df</span>
+<span class="co">#' X&lt;-df[,-1]</span>
+<span class="co">#' Y&lt;-as.matrix(df[,1])</span>
+<span class="co">#' X</span>
+<span class="co">#' Y</span>
+<span class="co">#' dim(X)</span>
+<span class="co">#' dim(Y)</span>
+<span class="co">#' X&lt;-append_design_matrix(X)</span>
+<span class="co">#' dim(X)</span>
+<span class="co">#' bh=bootreg(Y,X,1000) # works just fine! Whoo!</span>
+<span class="co">#' bh</span>
+bootreg_wls=function(Y,X,W,<span class="dt">iter=</span><span class="dv">1</span>, <span class="dt">alpha =</span> <span class="fl">0.05</span>)
+{
+  n=<span class="kw">dim</span>(X)[<span class="dv">1</span>]
+  <span class="co"># n is the number of rows</span>
+  nb=<span class="kw">dim</span>(X)[<span class="dv">2</span>]
+  <span class="co"># nb is the number of columns and is equal to number of betas to be estimated</span>
+  beta.mat=<span class="kw">matrix</span>(<span class="ot">NA_real_</span>,<span class="dt">nrow =</span> nb,<span class="dt">ncol=</span>iter)
+  index.mat=<span class="kw">matrix</span>(<span class="ot">NA_real_</span>,<span class="dt">nrow=</span>n,<span class="dt">ncol=</span>iter,<span class="dt">byrow=</span><span class="ot">FALSE</span>)
+  for(i in <span class="dv">1</span>:iter)
+  {
+    index.mat[,i] =<span class="st"> </span><span class="kw">sample</span>(<span class="dv">1</span>:n,n,<span class="dt">replace=</span><span class="ot">TRUE</span>)
+    <span class="co">#index.mat will be a matrix of random indices</span>
+    X.iter&lt;-<span class="kw">matrix</span>(<span class="ot">NA_real_</span>, <span class="dt">nrow=</span>n, <span class="dt">ncol =</span> nb, <span class="dt">byrow=</span><span class="ot">TRUE</span>)
+    Y.iter&lt;-<span class="kw">matrix</span>(<span class="ot">NA_real_</span>, <span class="dt">nrow=</span>n, <span class="dt">ncol =</span> <span class="dv">1</span>, <span class="dt">byrow =</span> <span class="ot">TRUE</span>)
+    for(j in <span class="dv">1</span> :<span class="st"> </span>n){
+      X.iter[j,] =<span class="st"> </span>X[index.mat[j,i],]
+      Y.iter[j,<span class="dv">1</span>] =<span class="st"> </span>Y[index.mat[j,i]]
+    }
+    beta.mat[,i]=<span class="st"> </span><span class="kw">betah</span>(X.iter, Y.iter, W)
+    <span class="co">#beta.mat is a matrix filled with bootstrap beta estimates</span>
+  }
+  <span class="kw">layout</span>(<span class="kw">matrix</span>(<span class="dv">1</span>:nb, <span class="dt">nr=</span>nb,<span class="dt">nc=</span><span class="dv">1</span>,<span class="dt">byrow=</span><span class="ot">TRUE</span>))
+  CIs =<span class="st"> </span><span class="kw">c</span>();
+  for(i in <span class="dv">1</span>:nb)
+  {
+    j=i<span class="dv">-1</span>
+    CI =<span class="st"> </span><span class="kw">quantile</span>(beta.mat[i,], <span class="kw">c</span>(alpha, <span class="dv">1</span>-alpha))
+    CIs =<span class="st"> </span><span class="kw">c</span>(CIs, CI)
+    <span class="kw">hist</span>(beta.mat[i,],<span class="dt">freq=</span><span class="ot">FALSE</span>,
+         <span class="dt">ylab=</span><span class="st">&quot;Density&quot;</span>  , <span class="dt">main=</span><span class="kw">substitute</span>(beta[j]),
+         <span class="dt">xlab =</span> <span class="kw">substitute</span>(beta[j]))
+    <span class="kw">mtext</span>(<span class="kw">paste</span>(<span class="st">&quot;CI = (&quot;</span>, <span class="kw">round</span>(CI[<span class="dv">1</span>],<span class="dv">4</span>), <span class="st">&quot;,&quot;</span>,<span class="kw">round</span>(CI[<span class="dv">2</span>],<span class="dv">4</span>),<span class="st">&quot;)&quot;</span> ), <span class="dt">cex=</span><span class="fl">0.6</span>)
+  }
+  
+  
+  <span class="kw">list</span>(<span class="dt">bh=</span>beta.mat, <span class="dt">Y=</span>Y,<span class="dt">X=</span>X, <span class="dt">Confidence_Intervals =</span> CIs)
+}</code></pre></div>
+</div>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

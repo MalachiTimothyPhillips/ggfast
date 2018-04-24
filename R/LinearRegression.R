@@ -146,12 +146,93 @@ predictor<-function(X, model){
 
 }
 
-############################################################################################
 
-"
-NOTICE: This work is not originally my own, but rather is a culmination of
-work that was inspired by a repository full of fantastic Bayesian inspired stuff
-that is possible within R, for more details, see https://github.com/timothyfrasier/Bayesian-Stats-Course
-"
+#'
+#' Point estimate for beta, used in linear regression
+#'
+#' Notice that this is done by solving the linear system:
+#' (X'WX) beta = X'WY
+#'
+#' Rather than using a direct method, ie.
+#'
+#' beta = (X'WX)^(-1)X'WY
+#'
+#' We shall instead use a package known as 'pcig' that solves
+#' a pre-conditioned conjugate gradient formulation, and is more
+#' numerically stable whenever the matrix approaches singularity.
+#'
+#' @param X Design matrix
+#' @param Y Response vector
+#' @param W weightt matrix
+#' @examples
+#' betah(matrix(c(1,2,3,4,5,6), nr=3, byrow=TRUE),
+#'       matrix(c(1,2,3), nr=3).
+#'       matrix(c(1.7,0,0,0.5), nr =2, byrow=TRUE))
+#'
+betah_wls<-function(X,Y,W){
+  if(!require("pcg")) install.packages("pcg")
+  pcg::pcg(t(X)%*%W%*%X, t(X)%*%W%*%Y)
+}
+
+#'
+#' Perform boot strapping
+#' @param Y response vector
+#' @param X design matrix
+#' @param W weight matrix
+#' @param iter(=1) number of iterations to run bootstrap
+#' @param alpha (=0.05) significance level for generating confidence intervals
+#' @examples
+#' df<-iris
+#'
+#' # scrape off all non-numeric data first
+#' df<-df[,sapply(df, is.numeric)]
+#' df
+#' X<-df[,-1]
+#' Y<-as.matrix(df[,1])
+#' X
+#' Y
+#' dim(X)
+#' dim(Y)
+#' X<-append_design_matrix(X)
+#' dim(X)
+#' bh=bootreg(Y,X,1000) # works just fine! Whoo!
+#' bh
+bootreg_wls=function(Y,X,W,iter=1, alpha = 0.05)
+{
+  n=dim(X)[1]
+  # n is the number of rows
+  nb=dim(X)[2]
+  # nb is the number of columns and is equal to number of betas to be estimated
+  beta.mat=matrix(NA_real_,nrow = nb,ncol=iter)
+  index.mat=matrix(NA_real_,nrow=n,ncol=iter,byrow=FALSE)
+  for(i in 1:iter)
+  {
+    index.mat[,i] = sample(1:n,n,replace=TRUE)
+    #index.mat will be a matrix of random indices
+    X.iter<-matrix(NA_real_, nrow=n, ncol = nb, byrow=TRUE)
+    Y.iter<-matrix(NA_real_, nrow=n, ncol = 1, byrow = TRUE)
+    for(j in 1 : n){
+      X.iter[j,] = X[index.mat[j,i],]
+      Y.iter[j,1] = Y[index.mat[j,i]]
+    }
+    beta.mat[,i]= betah(X.iter, Y.iter, W)
+    #beta.mat is a matrix filled with bootstrap beta estimates
+  }
+  layout(matrix(1:nb, nr=nb,nc=1,byrow=TRUE))
+  CIs = c();
+  for(i in 1:nb)
+  {
+    j=i-1
+    CI = quantile(beta.mat[i,], c(alpha, 1-alpha))
+    CIs = c(CIs, CI)
+    hist(beta.mat[i,],freq=FALSE,
+         ylab="Density"  , main=substitute(beta[j]),
+         xlab = substitute(beta[j]))
+    mtext(paste("CI = (", round(CI[1],4), ",",round(CI[2],4),")" ), cex=0.6)
+  }
+  
+  
+  list(bh=beta.mat, Y=Y,X=X, Confidence_Intervals = CIs)
+}
 
 
